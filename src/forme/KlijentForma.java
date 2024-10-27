@@ -7,12 +7,10 @@ package forme;
 import java.awt.Point;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
 import komunikacija.Komunikacija;
 import model.SkriveniBroj;
 import operacije.Operacije;
 import transfer.KlijentskiZahtev;
-import transfer.ServerskiOdgovor;
 
 /**
  *
@@ -21,6 +19,7 @@ import transfer.ServerskiOdgovor;
 public class KlijentForma extends javax.swing.JFrame {
 
     private int pokus = 0;
+    private int pogodj = 0;
 
     /**
      * Creates new form KlijentForma
@@ -98,21 +97,32 @@ public class KlijentForma extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+
         JTable tabela = (JTable) evt.getSource();
         Point p = evt.getPoint();
         int red = tabela.rowAtPoint(p);
         int kolona = tabela.columnAtPoint(p);
         if (red != -1 && kolona != -1) {
-            System.out.println("Red: " + red + " Kolona: " + kolona);
+            if (pokus >= 5) {
+                JOptionPane.showMessageDialog(null, "GRESKA", "NEMAS vise POKUSAJA", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             SkriveniBroj sb = new SkriveniBroj();
             sb.setKolona(kolona);
             sb.setRed(red);
             KlijentskiZahtev kz = new KlijentskiZahtev(Operacije.POGODI_BROJ, sb);
             Komunikacija.getInstance().posaljiZahtev(kz);
-            if ("POGODJEN".equals(Komunikacija.getInstance().primiOdgovor())) {
-                JOptionPane.showMessageDialog(null, "POGODIO", "POGODIO SI BROJ", JOptionPane.INFORMATION_MESSAGE);
+            SkriveniBroj skrBr = (SkriveniBroj) Komunikacija.getInstance().primiOdgovor().getOdgovor();
+            if (skrBr != null) {
+                tabela.setValueAt(skrBr.getVrednost(), red, kolona);
+                pokus++;
+                pogodj++;
+                if (pogodj >= 3) {
+                    JOptionPane.showMessageDialog(null, "POBEDA", "POBEDIO SI", JOptionPane.INFORMATION_MESSAGE);
+                }
             } else {
-                JOptionPane.showMessageDialog(null, "NISI POGODIO", "NISI POGODIO BROJ", JOptionPane.ERROR_MESSAGE);
+                tabela.setValueAt(-1, red, kolona);
+                pokus++;
             }
         }
     }//GEN-LAST:event_jTable1MouseClicked
